@@ -12,6 +12,7 @@ The pipeline is provided in the file HapCUT_phasing.sh
 
 Required files:  
 
-1) VCF file with samples to phase  
-2) VCF file with parental genomes  
-3) reference genome in fasta format  
+1) VCF file with samples to phase
+2) BAM files for samples to phase
+3) VCF file with parental genomes  
+4) FASTA file with a reference genome
