@@ -51,7 +51,8 @@ java -Xmx8g -jar GenomeAnalysisTK.jar \
  -F CHROM -F POS -F REF -F ALT -GF GT \
  -o reference_genomes_GT.table
 ```
- 
+`multiple_sample.vcf` should also be converted to `multiple_sample_GT.table` using this approach.
+
 ### Make reference file
 ```
 python createREFgenomesForPhasing.py -i reference_genomes_GT.table -o reference_genomes_REF.tab -s1 parent1_1,parent1_2 -s2 parent2_1,parent2_2  -m 0.25
@@ -62,6 +63,46 @@ python filterREFgenomeFixedOnly.py -i reference_genomes_REF.tab -o reference_gen
 ```
 ## Merge haplotype blocks
 ```
-python merge_HapCUT_blocks.py -i sample1.haplotype -r reference_genomes_REF.fixedOnly.tab -o sample1.haplotype.PHASED
-grep -v "\*\*\*" sample1.haplotype.PHASED > sample1.haplotype.PHASED.tab
+python assign_HapCUT_blocks.py -i sample1.haplotype -r reference_genomes_REF.fixedOnly.tab -o sample1.haplotype.PHASED
 ```
+Chimeric blocks (the phasing state was supported by less than 90% of sites) were set to missing data.
+
+### Merge heterozygous and homozygous sites
+
+`sample1.haplotype.PHASED.tab` contains only heterozygous sites of sample1. However, originally sample1 also contained homozygous sites that were polymorphic in other samples. These homozygous sites need to be returned.
+Phasing introduce some amount of missing data. To keep balance between missing data between homozygous and heterozygous sites, amount of introduced Ns need to be assessed and the same amount of Ns should be introduced to homozygous sites.
+#### Estimate the reduction heterozygous fraction
+##### Count heterozygous and homozygouse sites in original file
+`n` should be replaced with number of samples + 3:
+```
+# homozygotsOriginal:
+for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1==$2 {print $0}' | grep -vc N; done
+# heterozygotsOriginal:
+for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1!=$2 {print $0}' | grep -vc N; done
+```
+##### Count heterozygous and homozygouse sites in phased files
+```
+# homozygotsPhased:
+for i in *GTblock.PHASED.tab; do awk '$3==$4 {print $3,$4}' $i | grep -cv N; done
+# heterozygotsPhased:
+for i in *GTblock.PHASED.tab; do awk '$3!=$4 {print $3,$4}' $i | grep -cv N; done
+```
+#### Estimate the missing data correction value.
+
+homozygotsReduction = heterozygotsOriginal - heterozygotsPhased
+CorrectionValue = homozygotsReduction-0.04  (0.04 was choosed emperically, because some N are introduced to homozygots in discarded all-Ns blocks)
+
+#### Merge with introduction of Ns
+```
+python mergePhasedHeteroHomo_randomNs.py -p sample1.haplotype.PHASED -g multiple_sample_GT.table -o sample1.haplotype.PHASED.tab -Np 0.16
+```
+### Merge all phased files togather
+
+### Merge phased SNPs with whole genome (optional)
+
+```
+python mergePHASEDsnps_withWholeGenome.py -p merged/all.GTblock.PHASED.tab -g /media/dmykr161/WD-4TB1/data/EBC/GVCF/HaplotypeCaller/all-sites/GVCF31all_REF_heter.DP6-100.calls.tab -o all.GTblock.PHASED.wholeGenome.tab -Np 0.16
+```
+Again, missing data is a problem here. Phasing introduced some amount of Ns, so this needs to be taken into account during merging with whole genome. CorrectionValue (0.16) is also used here. Unphased heterozygous sites are also set to Ns. 
+
+*Note!* Check the ratio between polymorphic and non-polymorphic sites before and after phasing. It should be the same. If it is not, modify CorrectionValue untill you get the same ratio. Artificially changing polymorphic/non-polymorphic ration can affect the resuts in some subsequent analyses.
