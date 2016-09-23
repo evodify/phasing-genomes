@@ -3,7 +3,7 @@ This is a pipeline to phase a genome into two homeologous subgenomes. This phasi
 
 The phasing is performed in two stages:
 
-1) Generate phased haplotype blocks using HapCUT. /n
+1) Generate phased haplotype blocks using HapCUT.  
 2) Merge haplotype block into two continuous strings
 
 
