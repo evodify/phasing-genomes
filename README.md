@@ -97,11 +97,16 @@ CorrectionValue = homozygotsReduction-0.04  (0.04 was cchosen empirically becaus
 python mergePhasedHeteroHomo_randomNs.py -p sample1.haplotype.PHASED -g multiple_sample_GT.table -o sample1.haplotype.PHASED.tab -Np 0.16
 ```
 ### Merge all phased files togather
+```
+for i in *.haplotype.PHASED.tab; do cut -f 3,4 $i.col34; done
+rm sample1.haplotype.PHASED.tab.col34
+paste 12.4.GTblock.PHASED.tab *.col34 > all.haplotype.PHASED.tab
+```
 
 ### Merge phased SNPs with whole genome (optional)
 
 ```
-python mergePHASEDsnps_withWholeGenome.py -p merged/all.GTblock.PHASED.tab -g /media/dmykr161/WD-4TB1/data/EBC/GVCF/HaplotypeCaller/all-sites/GVCF31all_REF_heter.DP6-100.calls.tab -o all.GTblock.PHASED.wholeGenome.tab -Np 0.16
+python mergePHASEDsnps_withWholeGenome.py -p all.haplotype.PHASED.tab -g whole_genome.tab -o all.haplotype.PHASED.wholeGenome.tab -Np 0.16
 ```
 Again, missing data is a problem here. Phasing introduced some amount of Ns, so this needs to be taken into account during merging with whole genome. CorrectionValue (0.16) is also used here. Unphased heterozygous sites are also set to Ns. 
 
