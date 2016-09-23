@@ -30,7 +30,7 @@ java -Xmx8g -jar GenomeAnalysisTK.jar \
 
 ### Run HapCUT
 
-In my experience, phasing SNPs-only data produced haplotypes that were more consistent with parental reference genomes than phasing both SNPs and indels. If indels information is not required, I recommend to use only SNPs data.
+In my experience, phasing SNPs-only data produced haplotypes that were more consistent with parental reference genomes than phasing both SNPs and indels. If indels information is not required, I recommend using only SNPs data.
 
 ```
 extractHAIRS --VCF sample1.vcf --bam sample1.bam --maxmem 128000 --mbq 20 --mmq 30 --PEonly 1 > sample1.fragment_matrix
@@ -90,7 +90,7 @@ for i in *GTblock.PHASED.tab; do awk '$3!=$4 {print $3,$4}' $i | grep -cv N; don
 #### Estimate the missing data correction value.
 
 homozygotsReduction = heterozygotsOriginal - heterozygotsPhased
-CorrectionValue = homozygotsReduction-0.04  (0.04 was choosed emperically, because some N are introduced to homozygots in discarded all-Ns blocks)
+CorrectionValue = homozygotsReduction-0.04  (0.04 was cchosen empirically because some Ns are introduced to homozygots in discarded all-Ns blocks)
 
 #### Merge with introduction of Ns
 ```
@@ -105,4 +105,4 @@ python mergePHASEDsnps_withWholeGenome.py -p merged/all.GTblock.PHASED.tab -g /m
 ```
 Again, missing data is a problem here. Phasing introduced some amount of Ns, so this needs to be taken into account during merging with whole genome. CorrectionValue (0.16) is also used here. Unphased heterozygous sites are also set to Ns. 
 
-*Note!* Check the ratio between polymorphic and non-polymorphic sites before and after phasing. It should be the same. If it is not, modify CorrectionValue untill you get the same ratio. Artificially changing polymorphic/non-polymorphic ration can affect the resuts in some subsequent analyses.
+**Note!** Check the ratio between polymorphic and non-polymorphic sites before and after phasing. It should be the same. If it is not, modify CorrectionValue until you get the same proportion. Artificially changing polymorphic/non-polymorphic ration can biase results in some subsequent analyses.
