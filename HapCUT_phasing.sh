@@ -15,6 +15,8 @@ java -Xmx8g -jar GenomeAnalysisTK.jar \
 # Run HapCUT #
 ##############
 
+# HapCUT is avaliable at https://github.com/vibansal/hapcut
+
 # phase SNPs only
 
 extractHAIRS --VCF sample1.vcf --bam sample1.bam --maxmem 128000 --mbq 20 --mmq 30 --PEonly 1 > sample1.fragment_matrix
@@ -23,3 +25,9 @@ HAPCUT --fragments sample1.fragment_matrix --VCF sample1.vcf --output sample1.ha
 
 # In my data, phasing SNPs-only data produced haplotypes that were more consistent with parental reference genomes than phasing both SNPs and indels. 
 # to include indels, add to extractHAIRS command above the following options: --ref reference.fa --indels 1
+
+######################################
+# Prepare parental reference genomes #
+######################################
+
+
