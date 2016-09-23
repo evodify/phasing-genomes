@@ -53,7 +53,7 @@ java -Xmx8g -jar GenomeAnalysisTK.jar \
 ```
 `multiple_sample.vcf` should also be converted to `multiple_sample_GT.table` using this approach.
 
-### Make reference file
+### Make a reference file
 ```
 python createREFgenomesForPhasing.py -i reference_genomes_GT.table -o reference_genomes_REF.tab -s1 parent1_1,parent1_2 -s2 parent2_1,parent2_2  -m 0.25
 ```
