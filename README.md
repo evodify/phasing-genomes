@@ -10,4 +10,7 @@ Preparing reference parental genomes performed as an intermediate step.
 
 The pipeline is provided in the file HapCUT_phasing.sh
 
-Required files: 1) VCF file with samples to phase, 2) VCF file with parental genomes, 3) reference genome in fasta format  
+Required files:
+  1) VCF file with samples to phase  
+  2) VCF file with parental genomes  
+  3) reference genome in fasta format  
