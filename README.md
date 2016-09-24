@@ -90,7 +90,7 @@ for i in *GTblock.PHASED.tab; do awk '$3!=$4 {print $3,$4}' $i | grep -cv N; don
 #### Estimate the missing data correction value.
 
 homozygotsReduction = heterozygotsOriginal - heterozygotsPhased
-CorrectionValue = homozygotsReduction-0.04  (0.04 was cchosen empirically because some Ns are introduced to homozygots in discarded all-Ns blocks)
+MissingCorrectionValue = homozygotsReduction-0.04  (0.04 was cchosen empirically because some Ns are introduced to homozygots in discarded all-Ns blocks)
 
 #### Merge with introduction of Ns
 ```
@@ -103,11 +103,12 @@ rm sample1.haplotype.PHASED.tab.col34
 paste 12.4.GTblock.PHASED.tab *.col34 > all.haplotype.PHASED.tab
 ```
 
-### Merge phased SNPs with whole genome (optional)
+### Merge phased SNPs with a whole genome (optional)
 
 ```
 python mergePHASEDsnps_withWholeGenome.py -p all.haplotype.PHASED.tab -g whole_genome.tab -o all.haplotype.PHASED.wholeGenome.tab -Np 0.16
 ```
-Again, missing data is a problem here. Phasing introduced some amount of Ns, so this needs to be taken into account during merging with whole genome. CorrectionValue (0.16) is also used here. Unphased heterozygous sites are also set to Ns. 
+Only homozygous sites from a whole genome will be used for merging. Unphased heterozygous sites will be set to Ns. 
+Again, missing data is a problem here. Phasing introduced some amount of Ns, so this needs to be taken into account during merging with a whole genome. MissingCorrectionValue (0.16) also need to be used here. 
 
-**Note!** Check the ratio between polymorphic and non-polymorphic sites before and after phasing. It should be the same. If it is not, modify CorrectionValue until you get the same proportion. Artificially changing polymorphic/non-polymorphic ration can biase results in some subsequent analyses.
+**Note!** Check the ratio between polymorphic and non-polymorphic sites before and after phasing. It should be the same. If it is not, modify MissingCorrectionValue until you get the same proportion. Artificially changing polymorphic/non-polymorphic ration can biase results in some subsequent analyses.
