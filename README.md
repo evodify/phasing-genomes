@@ -57,9 +57,9 @@ java -Xmx8g -jar GenomeAnalysisTK.jar \
 ```
 python createREFgenomesForPhasing.py -i reference_genomes_GT.table -o reference_genomes_REF.tab -s1 parent1_1,parent1_2 -s2 parent2_1,parent2_2  -m 0.25
 ```
-### Keep fixed differences only
+### Keep non-shared polymorphism only
 ```
-python filterREFgenomeFixedOnly.py -i reference_genomes_REF.tab -o reference_genomes_REF.fixedOnly.tab
+python filterREFgenomeNonSharedOnly.py -i reference_genomes_REF.tab -o reference_genomes_REF.fixedOnly.tab
 ```
 ## Merge haplotype blocks
 ```
