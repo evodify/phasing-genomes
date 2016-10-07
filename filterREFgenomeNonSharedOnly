@@ -28,7 +28,7 @@
 # scaffold_1  647 C,G A
 #
 # command:
-# $ python filterREFgenomeFixedOnly.py -i <datafile> -o <outputfile>
+# $ python filterREFgenomeNonSharedOnly.py -i <datafile> -o <outputfile>
 #
 # contact Dmytro Kryvokhyzha dmytro.kryvokhyzha@evobio.eu
 #
