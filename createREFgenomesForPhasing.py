@@ -59,7 +59,7 @@ def extract_genotypes(genotypes, ind_index):
   allelesNoNs = [x for x in alleles if not (x == './.')]
   # split alleles:
   allelesNoNsSplit = [i for sublist in [i.split("/") for i in allelesNoNs] for i in sublist]
-  return allelesNoNsSplit
+  return allelesNoNsSplit, len(alleles), len(allelesNoNs)
 
 ############################ script ##############################
 
@@ -90,11 +90,18 @@ with open(args.input) as datafile:
     # extract genotypes using samples index
     sp1_alleles = extract_genotypes(words, ind_sp1)
     sp2_alleles = extract_genotypes(words, ind_sp2)
-
-    if float(len(sp1_alleles)) >= float(len(sp1_alleles))*miss and float(len(sp2_alleles)) >= float(len(sp2_alleles))*miss:
+    sp1_alleles_noNSplit = sp1_alleles[0]
+    sp2_alleles_noNSplit = sp2_alleles[0]
+    len_sp1_alleles = float(sp1_alleles[1])
+    len_sp2_alleles = float(sp2_alleles[1])
+    len_sp1_alleles_noN = float(sp1_alleles[2])
+    len_sp2_alleles_noN = float(sp2_alleles[2])
+    
+    # if missing data filter is passed, output the genotypes
+    if len_sp1_alleles_noN >= len_sp1_alleles*miss and len_sp2_alleles >= len_sp2_alleles*miss:
       counterProcessed += 1
-      sp1_allelesSet = set(sp1_alleles)
-      sp2_allelesSet = set(sp2_alleles)
+      sp1_allelesSet = set(sp1_alleles_noNSplit)
+      sp2_allelesSet = set(sp2_alleles_noNSplit)
       sp1AltPrint = ','.join(str(al) for al in sp1_allelesSet)
       sp2AltPrint = ','.join(str(al) for al in sp2_allelesSet)
       sp12_output.write("%s\t%s\t%s\n" % (rowName, sp1AltPrint, sp2AltPrint))
