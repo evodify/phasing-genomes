@@ -253,11 +253,13 @@ for line in GTfile:
   elif int(GTchr) == int(stopChr) and int(GTpos) > int(stopPos):
     GTgtN = hetToNsBefore(GTgt)
     appendGT(GTcoord, GTgtN, GTbefore)
+    # read phased file
     while int(GTchr) >= int(stopChr) and int(GTpos) > int(stopPos):
       phasedL = readPhasedLine(phasedFile, status)
       stopChr  = phasedL[0]
       stopPos = phasedL[1]
       phasedGT = phasedL[2]
+    # write inter-block fragment
     wF = writeFragment(status1, status, GTbefore, GTblock, fileoutput)
     status1 = wF[0]
     GTbefore = wF[1]
