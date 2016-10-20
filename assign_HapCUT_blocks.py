@@ -72,7 +72,13 @@ scaffold_1  1476  A AAAGATG
 contact Dmytro Kryvokhyzha dmytro.kryvokhyzha@evobio.eu
 
 """
-import sys, argparse
+
+# for options
+import sys
+import argparse
+# for graphics
+import matplotlib.pyplot as plt
+import numpy as np
 
 ############################ options ##############################
 
@@ -93,7 +99,7 @@ args = parser.parse_args()
 def lists_overlap(gt, lst):
   ref = lst.split(",")
   return any(i == gt for i in ref)
-    
+
 def flat_list(lst):
   return [item for sublist in [i.split(",") for i in lst] for item in sublist]
 
@@ -104,51 +110,76 @@ def phase_state(GT, RefGT):
     return 'same'
   elif overlapReverse[0] and overlapReverse[1]:
     return 'reverse'
-  
+
 def phase_blocks(posBlock, GTblock, RefBlock, FlagB):
-  blockOverlapCount = 0
+  """ rearrange HapCut blocks according to the order in parental reference file  """
+  blockSameCount = 0
+  blockReverseCount = 0
   GTblockPhase = []
   GTblockReturn = []
+
   for i in range(len(GTblock)):
     GT = GTblock[i]
     RefGT = RefBlock[i]
-    if FlagB[i] == "FV": # incontinent variants are set to N
-      sp1Phase = "N"
-      sp2Phase = "N"
-      GTblock[i] = [sp1Phase, sp2Phase]
-    else:
+    if FlagB[i] == "FV": # uncertain variants are set to N
+      GTblock[i] = ['N', 'N']
+    else:  # find and count cases when phased genotype is consistent/inconsistent with parental genotypes
       GTphase = phase_state(GT, RefGT)
       if GTphase == 'same':
-        blockOverlapCount += 1
+        blockSameCount += 1
         GTblockPhase.append('same')
       elif GTphase == 'reverse':
-        blockOverlapCount += 1
+        blockReverseCount += 1
         GTblockPhase.append('reverse')
+
+  # find prevalent phase and obey it
+  if len(GTblockPhase) <= 10: # absolutely consistent with parental genotypes or overlap with parental genotypes is less than 10 positions.
+    RSratio = 0.0
+  else:
+    RSratio = float(blockSameCount)/float(blockSameCount+blockReverseCount) # proportion of 'same' phasing state in block strings
+
   # define the block phase and produce output
-  if not GTblockPhase: 
+  if (GTblockPhase == []) or (RSratio < 0.90 and RSratio > 0.10): # discard block that have > 90% of inconsistency with parental reference genotypes
     for j in range(len(GTblock)):
       posBlockPrint = posBlock[j]
-      GTblockPrint1 = "N"
-      GTblockPrint2 = "N"
+      GTblockPrint1 = 'N'
+      GTblockPrint2 = 'N'
       GTblockReturn.append([posBlockPrint[0], posBlockPrint[1], GTblockPrint1, GTblockPrint2])
-  else:    
+  else: # phase according to the prevalent state
+    # find prevalent state
     phaseStateNumber = max(map(GTblockPhase.count, GTblockPhase))
     GTblockDefinedPahse = list(set( i for i in GTblockPhase if GTblockPhase.count(i) == phaseStateNumber ))
-        
-    if len(GTblockDefinedPahse) == 1:
+    if len(GTblockDefinedPahse) == 1:  # check if one state is prevalent
       if GTblockDefinedPahse == ['same']:
         phaseState = [0,1]
       else:
         phaseState = [1,0]
-    else:
-      print("Undefined option at", posBlock)
-    for j in range(len(GTblock)):
-      GT = GTblock[j]
-      posBlockPrint = posBlock[j]
-      GTblockPrint1 = GT[phaseState[0]]
-      GTblockPrint2 = GT[phaseState[1]]
-      GTblockReturn.append([posBlockPrint[0], posBlockPrint[1], GTblockPrint1, GTblockPrint2])
-  return(GTblockReturn)
+      for j in range(len(GTblock)):
+        GT = GTblock[j]
+        posBlockPrint = posBlock[j]
+        GTblockPrint1 = GT[phaseState[0]]
+        GTblockPrint2 = GT[phaseState[1]]
+        GTblockReturn.append([posBlockPrint[0], posBlockPrint[1], GTblockPrint1, GTblockPrint2])
+    else: # if there is conflict in phasing state, set to Ns. It usually applies for blocks with less then 10 position overlaps with parental reference.
+      for j in range(len(GTblock)):
+        posBlockPrint = posBlock[j]
+        GTblockPrint1 = 'N'
+        GTblockPrint2 = 'N'
+        GTblockReturn.append([posBlockPrint[0], posBlockPrint[1], GTblockPrint1, GTblockPrint2])
+        phaseState = [0,1]
+
+  return(GTblockReturn, RSratio)
+
+def write_phased(posB, GTb, RefB, Flag, R):
+  """ preform phasing and write output"""
+  output.write("********\n")  # uncomment this line to separate blocks
+  phasedBlockRatio = phase_blocks(posB, GTb, RefB, Flag)
+  phasedBlock = phasedBlockRatio[0]
+  if not (phasedBlockRatio[1] == 0 or phasedBlockRatio[1] == 1): # ignore ratio of 0 and 1
+    R.append(phasedBlockRatio[1])
+  for block in phasedBlock:
+    BlockPrint = '\t'.join(str(e) for e in block)
+    output.write("%s\n" % BlockPrint)
 
 ############################ script ##############################
 
@@ -164,65 +195,77 @@ counter = 0
 print('Creating the output file...')
 sampleID = args.input_to_phase
 output = open(args.output, 'w')
-output.write("#CHROM\tPOS\t%s_A\t%s_B\n" % (sampleID, sampleID))
+output.write("#CHROM\tPOS\t%s_A\t%s_B\n" % (sampleID, sampleID)) # make a header
+
+Ratio = [] # ratio between phasing states ['reverse', 'same']
 
 with open(args.input_to_phase) as datafile:
   for line in datafile:
     words = line.split()
+
+    # read blocks, phase and write output
     if words[0] == "********": # if the end of a block is reached, phase the block and write output
-      phasedBlock = phase_blocks(posBlock, GTblock, RefBlock, FlagBlock)
-      for block in phasedBlock:
-        BlockPrint = '\t'.join(str(e) for e in block)
-        output.write("%s\n" % BlockPrint)
-    elif words[0] == "BLOCK:": # reset all lists at the beginning of each block
+      write_phased(posBlock, GTblock, RefBlock, FlagBlock, Ratio)
+
+    # read a block and corresponding reference info into memory
+    elif words[0] == "BLOCK:":  # reset all lists at the beginning of each block
       GTblock = []
       posBlock = []
       RefBlock = []
       FlagBlock = []
-    else: # append info to a block 
+    else:  # read a block
       phase = words[1:3]
       chrPos = words[3:5]
       genotypes = flat_list(words[5:7])
       GT = [genotypes[int(phase[0])], genotypes[int(phase[1])]]
+      # check whether a variant marked as not real or not heterozygous (FV flag by HapCUT)
       mec = words[8].split(":")
-      if mec[-1] == 'FV': # if variant is not real or not heterozygous by HapCUT
+      if mec[-1] == 'FV': 
         flag = 'FV'
       else:
         flag = 'no' 
-        
+
       # find overlap with parental reference genotypes
-      stopChr = int(chrPos[0].split("_")[1])
-      stopPos = int(chrPos[1])
-      while stopChr >= refChr and stopPos > refPos:
+      gtChr = int(chrPos[0].split("_")[1])
+      gtPos = int(chrPos[1])
+      # read reference file until the overlap with input data is found
+      while refChr < gtChr or refChr == gtChr and refPos < gtPos:
         refWords = RefFile.readline().split()
         if not refWords:
           break
         else:
           refChr = int(refWords[0].split("_")[1])
           refPos = int(refWords[1])
-      if stopChr == refChr and stopPos == refPos: # if reference not found, set reference to Ns
+      if gtChr == refChr and gtPos == refPos:  # set reference genotypes 
         RefGT = refWords[2:]
-      else:
+      else:  # if not found, set reference to Ns
         RefGT = ['N', 'N']
 
+      # append the genotypes, positions, reference and hapCUT flags
       GTblock.append(GT)
       posBlock.append(chrPos)
       RefBlock.append(RefGT)
       FlagBlock.append(flag)
-    
+
     # track the progress:
     counter += 1
     if counter % 1000000 == 0:
       print str(counter), "lines processed"
     else:
       continue
-    
-  ################################# Phase the last block ##################################
 
-  phasedBlock = phase_blocks(posBlock, GTblock, RefBlock, FlagBlock)
-  for block in phasedBlock:
-    BlockPrint = '\t'.join(str(e) for e in block)
-    output.write("%s\n" % BlockPrint)
+  # Phase the last block
+  write_phased(posBlock, GTblock, RefBlock, FlagBlock, Ratio)
+
   output.close()
 datafile.close()
+RefFile.close()
+
+# plot the Ratio distribution
+plt.hist(Ratio, color="grey", bins = 100)
+plt.xticks(np.arange(0,1, 0.1))
+plt.xlabel('Propostion of phasing states: same/(same+reverse)')
+plt.ylabel("Number of blocks")
+plt.savefig(args.output+'.pdf', dpi=90)
+
 print "Done!"
