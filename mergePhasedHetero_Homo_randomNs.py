@@ -75,8 +75,7 @@ scaffold_1  1476  A AAAGATG
 
 contact Dmytro Kryvokhyzha dmytro.kryvokhyzha@evobio.eu
 
-python mergePHASEDsnpsGT.py -p phased-data -g GT.table -s sample-name -o output  -Np 0.15
-
+python mergePhasedHetero_Homo_randomNs.py -p phased-data -g GT.table -s sample-name -o output  -Np 0.15
 '''
 
 import argparse, sys, numpy
@@ -118,20 +117,26 @@ def hetToNsBefore(g):
 
 def writeBlock(listToWrire, fileout):
   ''' writes an assembled block to a file '''
-  if all(x[1][0] == x[1][1] for x in listToWrire):
-    for i in listToWrire:
-      i[1] = ['N', 'N']
-  for el in range(len(listToWrire)):
-    listToWrireP = '\t'.join(str(i) for sublist in listToWrire[el] for i in sublist)
-    fileout.write("%s\n" % listToWrireP)
+  if listToWrire:
+    if all(x[1][0] == x[1][1] for x in listToWrire):
+      for i in listToWrire:
+        i[1] = ['N', 'N']
+    #fileout.write("******* start block\n")  # for debug mode
+    for el in range(len(listToWrire)):
+      listToWrireP = '\t'.join(str(i) for sublist in listToWrire[el] for i in sublist)
+      fileout.write("%s\n" % listToWrireP)
+    #fileout.write("******* end block\n")  # for debug mode
 
 def writeBefore(listToWrire, fileout):
   ''' writes into a file homozygotes that are between blocks '''
-  for el in range(len(listToWrire)):
-    if listToWrire[el][1][0] != listToWrire[el][1][1] or listToWrire[el][1] == ['.', '.']:
-      listToWrire[el][1] = ['N', 'N']
-    listToWrireP = '\t'.join(str(i) for sublist in listToWrire[el] for i in sublist)
-    fileout.write("%s\n" % listToWrireP)
+  if listToWrire:
+    #fileout.write("******* start inter-block\n")  # for debug mode
+    for el in range(len(listToWrire)):
+      if listToWrire[el][1][0] != listToWrire[el][1][1] or listToWrire[el][1] == ['.', '.']:
+        listToWrire[el][1] = ['N', 'N']
+      listToWrireP = '\t'.join(str(i) for sublist in listToWrire[el] for i in sublist)
+      fileout.write("%s\n" % listToWrireP)
+    #fileout.write("******* end inter-block\n")  # for debug mode
     
 def appendGT(coord, g, block):
   ''' appends genotypes from GT.table and sets heterozygotes to Ns on a fly'''
@@ -212,7 +217,7 @@ phasedGT = phasedL[2]
 
 GTfile = open(args.gt_table, 'r')
 GTheader = GTfile.readline().split()
-indnumber = GTheader.index(name)
+indnumber = GTheader.index(name) # index sample position
 
 counter = 0
 
@@ -223,37 +228,44 @@ for line in GTfile:
   GTcoord = words[0:2]
   GTgt = words[indnumber].split('/')
   if stopChr == 'NA':
-    writeBlock(GTblock, fileoutput)
+    ''' when there is no phased data but GT.table still has some information. 
+    Usually it is at the end of file '''
     GTblock = []
     GTgtN = hetToNsBefore(GTgt)
     appendGT(GTcoord, GTgtN, GTbefore)
   elif int(GTchr) == int(stopChr) and int(GTpos) < int(stopPos) and status == 'before':
+    # append information from GT.table that is between phased blocks
     GTgtN = hetToNsBefore(GTgt)
     appendGT(GTcoord, GTgtN, GTbefore)
   elif int(GTchr) == int(stopChr) and int(GTpos) < int(stopPos) and status == 'block':
+    # append information from GT.table that is within a phased block
     GTgtN = hetToNsBlock(GTgt)
     appendGT(GTcoord, GTgtN, GTblock)
   elif (GTchr == stopChr and GTpos == stopPos):
+    # append information from a phased file
     eqLine = appendPhasedGT(GTblock, GTcoord, phasedGT, phasedFile)
     GTblock = eqLine[0]
     stopChr = eqLine[1]
     stopPos = eqLine[2]
     phasedGT = eqLine[3]
     status = eqLine[4]
-    wF = writeFragment(status1, status, GTbefore, GTblock, fileoutput)
+    if GTblock:
+      wF = writeFragment(status1, status, GTbefore, GTblock, fileoutput)
     status1 = wF[0]
     GTbefore = wF[1]
     GTblock = wF[2]
   elif int(GTchr) != int(stopChr):
+    # write output if the end of a chromosome is reached
     status = 'before'
     writeBlock(GTblock, fileoutput)
     GTblock = []
     GTgtN = hetToNsBefore(GTgt)
     appendGT(GTcoord, GTgtN, GTbefore)
-  elif int(GTchr) == int(stopChr) and int(GTpos) > int(stopPos):
+  elif int(GTchr) == int(stopChr) and int(GTpos) > int(stopPos):  
+    # read more lines from GT.table if its position exceed the phased data
     GTgtN = hetToNsBefore(GTgt)
     appendGT(GTcoord, GTgtN, GTbefore)
-    # read phased file
+    # read phased file untill the same position is reached
     while int(GTchr) >= int(stopChr) and int(GTpos) > int(stopPos):
       phasedL = readPhasedLine(phasedFile, status)
       stopChr  = phasedL[0]
@@ -264,17 +276,19 @@ for line in GTfile:
     status1 = wF[0]
     GTbefore = wF[1]
     GTblock = wF[2]
-  else: # print Error if there is unexpected condition
-    print('ERROR: unexpected case, check input files or the script for errors')
-  
-  # track the progress:  
+  else: # print Error if there is an unpredicted condition
+    raise Exception('ERROR: unexpected case, check input files or the script for errors')
+
+  # track the progress:
   counter += 1
   if counter % 1000000 == 0:
     print str(counter), "lines processed"
 
 # write last fragments that are in memory
-writeBlock(GTblock, fileoutput)
-writeBefore(GTbefore, fileoutput)
+if GTblock:
+  writeBlock(GTblock, fileoutput)
+if GTbefore:
+  writeBefore(GTbefore, fileoutput)
 
 GTfile.close()
 phasedFile.close()
