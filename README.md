@@ -70,6 +70,9 @@ python filterREFgenomeNonSharedOnly.py -i reference_genomes_REF.tab -o reference
 python assign_HapCUT_blocks.py -i sample1.haplotype -r reference_genomes_REF.nonShared.tab -o sample1.haplotype.PHASED
 ```
 Chimeric blocks (the phasing state was supported by less than 90% of sites) were set to missing data.
+For example, below is the distribution of phasing state. Blocks between 0.10 and 0.90 are considered chimeric in the script. If your distrubution is different (graphics is produced by the script), edit this code `RSratio < 0.90 and RSratio > 0.10` in the script.
+
+![alt tag] (https://github.com/evodify/genome-phasing/blob/master/chimericBlocks.png)
 
 ### Merge heterozygous and homozygous sites
 
