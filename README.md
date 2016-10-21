@@ -15,6 +15,10 @@ Required files:
 3) VCF file with parental genomes  
 4) FASTA file with a reference genome  
 
+All python script contain description of input and output data format in the header of each file.
+To see possible option, run python script with --help option:
+`python script.py --help`
+
 ## Generate phased haplotype blocks using HapCUT
 
 ### Select a sample from a multisample VCF
@@ -59,11 +63,11 @@ python createREFgenomesForPhasing.py -i reference_genomes_GT.table -o reference_
 ```
 ### Keep non-shared polymorphism only
 ```
-python filterREFgenomeNonSharedOnly.py -i reference_genomes_REF.tab -o reference_genomes_REF.fixedOnly.tab
+python filterREFgenomeNonSharedOnly.py -i reference_genomes_REF.tab -o reference_genomes_REF.nonShared.tab
 ```
 ## Merge haplotype blocks
 ```
-python assign_HapCUT_blocks.py -i sample1.haplotype -r reference_genomes_REF.fixedOnly.tab -o sample1.haplotype.PHASED
+python assign_HapCUT_blocks.py -i sample1.haplotype -r reference_genomes_REF.nonShared.tab -o sample1.haplotype.PHASED
 ```
 Chimeric blocks (the phasing state was supported by less than 90% of sites) were set to missing data.
 
@@ -94,7 +98,7 @@ MissingCorrectionValue = homozygotsReduction-0.04  (0.04 was cchosen empirically
 
 #### Merge with introduction of Ns
 ```
-python mergePhasedHeteroHomo_randomNs.py -p sample1.haplotype.PHASED -g multiple_sample_GT.table -o sample1.haplotype.PHASED.tab -Np 0.16
+python mergePhasedHeteroHomo_randomNs.py -p sample1.haplotype.PHASED -s sample-name -g multiple_sample_GT.table -o sample1.haplotype.PHASED.tab -Np 0.16
 ```
 ### Merge all phased files togather
 ```
@@ -106,9 +110,9 @@ paste 12.4.GTblock.PHASED.tab *.col34 > all.haplotype.PHASED.tab
 ### Merge phased SNPs with a whole genome (optional)
 
 ```
-python mergePHASEDsnps_withWholeGenome.py -p all.haplotype.PHASED.tab -g whole_genome.tab -o all.haplotype.PHASED.wholeGenome.tab -Np 0.16
+python mergePHASEDsnps_withWholeGenome.py -p all.haplotype.PHASED.tab -g whole_genome_multiple_sample_GT.tab -o all.haplotype.PHASED.wholeGenome.tab -Np 0.16
 ```
-Only homozygous sites from a whole genome will be used for merging. Unphased heterozygous sites will be set to Ns. 
+Only homozygous sites from a whole genome will be used for merging. Unphased heterozygous sites will be set to Ns. Number of samples in `all.haplotype.PHASED.tab` and `whole_genome_multiple_sample_GT.tab` should be the same.
 Again, missing data is a problem here. Phasing introduced some amount of Ns, so this needs to be taken into account during merging with a whole genome. MissingCorrectionValue (0.16) also need to be used here. 
 
 **Note!** Check the ratio between polymorphic and non-polymorphic sites before and after phasing. It should be the same. If it is not, modify MissingCorrectionValue until you get the same proportion. Artificially changing polymorphic/non-polymorphic ration can biase results in some subsequent analyses.

@@ -28,7 +28,7 @@ scaffold_1  619 TA  T
 scaffold_1  647 C,G A
 
 command:
-$ python filterREFgenomeNonSharedOnly.py -i <datafile> -o <outputfile>
+$ python filterREFgenomeNonSharedOnly.py -i datafile -o outfile
 
 contact Dmytro Kryvokhyzha dmytro.kryvokhyzha@evobio.eu
 '''

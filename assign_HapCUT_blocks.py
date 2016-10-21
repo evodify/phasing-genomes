@@ -2,9 +2,6 @@
 """
 This script rearrange haplotype blocks produced by HapCUT into two continuous strings. 
 
-command:
-python assign_HapCUT_blocks.py -i HapCUT_blocks.file -r parental_genomes_reference.file -o output.file
-
 HapCUT_blocks.file:
 BLOCK: offset: 3 len: 11 phased: 9 SPAN: 114 MECscore 19.92 fragments 43
 3 0 1 scaffold_1  619 T TA  0/1:16,11:27:99:401,0,540 10,12:-53.7,-8.1,-27.1:-19.0:0.0
@@ -68,6 +65,10 @@ scaffold_1  1297  C T
 scaffold_1  1301  C G
 scaffold_1  1475  C CAAAGAT
 scaffold_1  1476  A AAAGATG
+
+
+command:
+python assign_HapCUT_blocks.py -i HapCUT_blocks.file -r parental_genomes_reference.file -o output.file
 
 contact Dmytro Kryvokhyzha dmytro.kryvokhyzha@evobio.eu
 

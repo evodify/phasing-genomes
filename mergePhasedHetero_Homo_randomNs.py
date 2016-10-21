@@ -2,7 +2,7 @@
 '''
 The script merged phased heterozygous sites with homozygous sites that were skipped during phasing by HapCUT.
 
-phased-data file:
+phased-data:
 CHROM  POS Sample1_A  Sample1_B
 scaffold_1  619 TA  T
 scaffold_1  655 N N
@@ -23,8 +23,7 @@ scaffold_1  1301  C G
 scaffold_1  1475  C CAAAGAT
 scaffold_1  1476  A AAAGATG
 
-GT.table file:
-
+GT.table:
 CHROM	POS	Sample1	Sample2	Sample3	Sample4
 scaffold_1	508	T/T	T/T	T/T	A/A
 scaffold_1	593	T/T	T/T	T/A	T/T
@@ -51,8 +50,7 @@ scaffold_1	1301	C/G	C/G	C/G	C/G
 scaffold_1	1475	C/CAAAGAT	C/CAAAGAT	C/CAAAGAT	C/CAAAGAT
 scaffold_1	1476	A/AAAGATG	A/AAAGATG	A/AAAGATG	A/AAAGATG
 
-output file:
-
+output:
 CHROM  POS Sample1_A  Sample1_B
 scaffold_1  619 TA  T
 scaffold_1  655 N N
