@@ -77,7 +77,7 @@ For example, below is the distribution of phasing state. Blocks between 0.10 and
 ### Merge heterozygous and homozygous sites
 
 `sample1.haplotype.PHASED.tab` contains only heterozygous sites of sample1. However, originally sample1 also contained homozygous sites that were polymorphic in other samples. These homozygous sites need to be returned.
-Phasing introduce some amount of missing data. To keep balance between missing data between homozygous and heterozygous sites, amount of introduced Ns need to be assessed and the same amount of Ns should be introduced to homozygous sites.
+Phasing introduces some amount of missing data. To keep balance between missing data between homozygous and heterozygous sites, amount of introduced Ns need to be assessed and the same amount of Ns should be introduced to homozygous sites.
 #### Estimate the reduction heterozygous fraction
 ##### Count heterozygous and homozygouse sites in original file
 `n` should be replaced with number of samples + 3:
