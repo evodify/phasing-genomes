@@ -77,7 +77,7 @@ For example, below is the distribution of phasing state. Blocks between 0.10 and
 ### Merge heterozygous and homozygous sites
 
 `sample1.haplotype.PHASED.tab` contains only heterozygous sites of sample1. However, originally sample1 also contained homozygous sites that were polymorphic in other samples. These homozygous sites need to be returned.
-Phasing introduces some amount of missing data. To keep balance between homozygous and heterozygous sites, amount of introduced Ns need to be assessed and the same amount of Ns should be introduced to homozygous sites.
+Phasing introduces some amount of missing data. To keep balance between homozygous and heterozygous sites, the amount of introduced Ns need to be assessed and the same amount of Ns should be introduced to homozygous sites.
 #### Estimate the reduction heterozygous fraction
 ##### Count heterozygous and homozygouse sites in original file
 `n` should be replaced with number of samples + 3:
@@ -87,17 +87,16 @@ for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g'
 # heterozygotsOriginal:
 for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1!=$2 {print $0}' | grep -vc N; done
 ```
-##### Count heterozygous and homozygouse sites in phased files
+##### Count heterozygous sites in phased files
 ```
-# homozygotsPhased:
-for i in *GTblock.PHASED.tab; do awk '$3==$4 {print $3,$4}' $i | grep -cv N; done
-# heterozygotsPhased:
-for i in *GTblock.PHASED.tab; do awk '$3!=$4 {print $3,$4}' $i | grep -cv N; done
+# heterozygotsPhased
+for i in *GTblock.PHASED.tab; do grep -vw "********" $i | awk '$3!=$4 {print $3,$4}' | grep -cv N; done
 ```
 #### Estimate the missing data correction value.
 
-homozygotsReduction = heterozygotsOriginal - heterozygotsPhased
-MissingCorrectionValue = homozygotsReduction-0.04  (0.04 was cchosen empirically because some Ns are introduced to homozygots in discarded all-Ns blocks)
+homozygotsPhased = heterozygotsPhased * homozygotsOriginal / heterozygotsOriginal
+
+MissingCorrectionValue = 1 - homozygotsPhased / homozygotsOriginal  (0.04 was chosen empirically because some Ns are introduced to homozygots in all-Ns blocks)
 
 #### Merge with introduction of Ns
 ```
