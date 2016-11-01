@@ -96,7 +96,7 @@ for i in *GTblock.PHASED; do grep -vw "********" $i | awk '$3!=$4 {print $0}' | 
 python mergePhasedHeteroHomo_randomNs.py -p sample1.haplotype.PHASED -s sample-name -g multiple_sample_GT.table -o sample1.haplotype.PHASED.tab -Np 0.20
 ```
 
-##### Count heterozygous and homozygous sites in original file
+##### Count heterozygous and homozygous sites in original files
 `n` should be replaced with number of samples + 3:
 ```
 # homozygotsOriginal:
