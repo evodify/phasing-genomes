@@ -82,14 +82,14 @@ Phasing introduces some amount of missing data. To keep balance between homozygo
 #### Estimate the missing data correction value.
 ```
 # heterozygotsPhased:
-for i in *GTblock.PHASED; do grep -vw "********" $i | wc -l ; done`
+for i in *.haplotype.PHASED; do grep -vwc "********" $i; done
 # nonMissingPhased:
-for i in *GTblock.PHASED; do grep -vw "********" $i | awk '$3!=$4 {print $0}' | wc -l; done
+for i in *.haplotype.PHASED; do grep -vw "********" $i | awk '$3!=$4 {count++} END {print count}'; done
 ```
 
 `introducedNs = 1 - nonMissingPhased / heterozygotsPhased`
 
-`introducedNs` is the missing data correction value (-Np). In my case, it was ~0.20.
+`introducedNs` is used to define the missing data correction value (-Np). In my case, it was ~0.20.
 
 #### Merge with introduction of Ns
 ```
@@ -109,20 +109,22 @@ for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g'
 ##### Count heterozygous and homozygous sites in merged files
 ```
 # homozygotsPhased:
-for i in *GTblock.PHASED.tab; do awk '$3==$4 && $3!="N" && $4!="N" {count++} END {print count}' $i; done
+for i in *.haplotype.PHASED.tab; do awk '$3==$4 && $3!="N" && $4!="N" {count++} END {print count}' $i; done
 
 # heterozygotsPhased:
-for i in *GTblock.PHASED.tab; do awk '$3!=$4 {count++} END {print count} $i | grep -cv N; done
+for i in *.haplotype.PHASED.tab; do awk '$3!=$4 {count++} END {print count}' $i; done
 ```
 
 ##### Compare the levels of heterozygosity between original and phased data. 
 Expectation: `heterozygotsOriginal / homozygotsOriginal = heterozygotsPhased / homozygotsPhased`
+The value of `introducedNs` is used for a very rough correction. For the most precise correction, `introducedNs` should be lowered by some amount because some extra Ns are introduced to homozygots in all-Ns blocks.
+I recommend to run `mergePhasedHeteroHomo_randomNs.py` with `introducedNs` values in the -Np option and then lower it little bt little, until the ratio heterozygots/heterozygots in phased and non-phased data is equal.
 
 ### Merge all phased files togather
 ```
 for i in *.haplotype.PHASED.tab; do cut -f 3,4 $i.col34; done
 rm sample1.haplotype.PHASED.tab.col34
-paste 12.4.GTblock.PHASED.tab *.col34 > all.haplotype.PHASED.tab
+paste 12.4.haplotype.PHASED.tab *.col34 > all.haplotype.PHASED.tab
 ```
 
 ### Merge phased SNPs with a whole genome (optional)
