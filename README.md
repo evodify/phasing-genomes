@@ -124,7 +124,7 @@ I recommend to run `mergePhasedHeteroHomo_randomNs.py` with `introducedNs` value
 
 ### Merge all phased files togather
 ```
-for i in *.haplotype.PHASED.tab; do cut -f 3,4 $i.col34; done
+for i in *.haplotype.PHASED.tab; do cut -f 3,4 $i > $i.col34; done
 rm sample1.haplotype.PHASED.tab.col34
 paste 12.4.haplotype.PHASED.tab *.col34 > all.haplotype.PHASED.tab
 ```
