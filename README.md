@@ -65,7 +65,7 @@ python createREFgenomesForPhasing.py -i reference_genomes_GT.table -o reference_
 ```
 python filterREFgenomeNonSharedOnly.py -i reference_genomes_REF.tab -o reference_genomes_REF.nonShared.tab
 ```
-## Merge haplotype blocks
+## Phase haplotype blocks
 ```
 python assign_HapCUT_blocks.py -i sample1.haplotype -r reference_genomes_REF.nonShared.tab -o sample1.haplotype.PHASED
 ```
@@ -76,32 +76,47 @@ For example, below is the distribution of phasing state. Blocks between 0.10 and
 
 ### Merge heterozygous and homozygous sites
 
-`sample1.haplotype.PHASED.tab` contains only heterozygous sites of sample1. However, originally sample1 also contained homozygous sites that were polymorphic in other samples. These homozygous sites need to be returned.
+`sample1.haplotype.PHASED` contains only heterozygous sites of sample1. However, originally sample1 also contained homozygous sites that were polymorphic in other samples. These homozygous sites need to be returned.
 Phasing introduces some amount of missing data. To keep balance between homozygous and heterozygous sites, the amount of introduced Ns need to be assessed and the same amount of Ns should be introduced to homozygous sites.
-#### Estimate the reduction heterozygous fraction
-##### Count heterozygous and homozygouse sites in original file
-`n` should be replaced with number of samples + 3:
-```
-# homozygotsOriginal:
-for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1==$2 {print $0}' | grep -vc N; done
-# heterozygotsOriginal:
-for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1!=$2 {print $0}' | grep -vc N; done
-```
-##### Count heterozygous sites in phased files
-```
-# heterozygotsPhased
-for i in *GTblock.PHASED.tab; do grep -vw "********" $i | awk '$3!=$4 {print $3,$4}' | grep -cv N; done
-```
+
 #### Estimate the missing data correction value.
 
-homozygotsPhased = heterozygotsPhased * homozygotsOriginal / heterozygotsOriginal
+# heterozygotsPhased:
+`for i in *GTblock.PHASED; do grep -vw "********" $i | wc -l ; done`
+# nonMissingPhased:
+`for i in *GTblock.PHASED; do grep -vw "********" $i | awk '$3!=$4 {print $0}' | wc -l; done`
 
-MissingCorrectionValue = 1 - homozygotsPhased / homozygotsOriginal  (0.04 was chosen empirically because some Ns are introduced to homozygots in all-Ns blocks)
+`introducedNs = 1 - nonMissingPhased / heterozygotsPhased`
+
+`introducedNs` is the missing data correction value (-Np). In my case, it was ~0.20.
 
 #### Merge with introduction of Ns
 ```
-python mergePhasedHeteroHomo_randomNs.py -p sample1.haplotype.PHASED -s sample-name -g multiple_sample_GT.table -o sample1.haplotype.PHASED.tab -Np 0.16
+python mergePhasedHeteroHomo_randomNs.py -p sample1.haplotype.PHASED -s sample-name -g multiple_sample_GT.table -o sample1.haplotype.PHASED.tab -Np 0.20
 ```
+
+##### Count heterozygous and homozygous sites in original file
+`n` should be replaced with number of samples + 3:
+```
+# homozygotsOriginal:
+for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1==$2 && $1!="N" && $2!="N" {count++} END {print count}'; done
+
+# heterozygotsOriginal:
+for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1!=$2 {count++} END {print count}'; done
+```
+
+##### Count heterozygous and homozygous sites in merged files
+```
+# homozygotsPhased:
+for i in *GTblock.PHASED.tab; do awk '$3==$4 && $3!="N" && $4!="N" {count++} END {print count}' $i; done
+
+# heterozygotsPhased:
+for i in *GTblock.PHASED.tab; do awk '$3!=$4 {count++} END {print count} $i | grep -cv N; done
+```
+
+##### Compare the levels of heterozygosity between original and phased data. 
+Expectation: `heterozygotsOriginal / homozygotsOriginal = heterozygotsPhased / homozygotsPhased`
+
 ### Merge all phased files togather
 ```
 for i in *.haplotype.PHASED.tab; do cut -f 3,4 $i.col34; done
