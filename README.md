@@ -119,7 +119,7 @@ for i in *.haplotype.PHASED.tab; do awk '$3!=$4 {count++} END {print count}' $i;
 Expectation: `heterozygotsOriginal / homozygotsOriginal = heterozygotsPhased / homozygotsPhased`
 
 
-The value of `introducedNs` is used for a very rough correction. For the most precise correction, `introducedNs` should be lowered by some amount because some extra Ns are introduced to homozygots in all-Ns blocks.
+The value of `introducedNs` is used for a very rough correction. For the most precise correction, `introducedNs` should be lowered by some amount because extra Ns are introduced to homozygots in all-Ns blocks.
 I recommend to run `mergePhasedHeteroHomo_randomNs.py` with `introducedNs` values in the -Np option and then lower it little by little, until the ratio heterozygots / heterozygots in the phased and non-phased data are as similar as possible.
 
 ### Merge all phased files togather
