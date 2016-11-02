@@ -48,7 +48,7 @@ scaffold_1      14      T       T
 scaffold_1      15      C       C
 
 output-file:
-CHROM   POS REF Sample1_A   Sample1_B   Sample2_A   Sample2_B
+CHROM   POS Sample1_A   Sample1_B   Sample2_A   Sample2_B
 scaffold_1  1   A   A   A   A
 scaffold_1  2   G   T   G   T
 scaffold_1  3   T   T   T   T
@@ -110,7 +110,7 @@ phasedFile = open(args.phased, 'r')
 phasedHeader = phasedFile.readline()
 headerS = phasedHeader.split()
 fileoutput = open(args.output, 'w')
-fileoutput.write("%s\tREF\t%s\n" % ('\t'.join(str(e) for e in headerS[0:2]), '\t'.join(str(e) for e in headerS[2:])))
+fileoutput.write("%s\t%s\n" % ('\t'.join(str(e) for e in headerS[0:2]), '\t'.join(str(e) for e in headerS[2:])))
 
 print('Merging ...')
 
