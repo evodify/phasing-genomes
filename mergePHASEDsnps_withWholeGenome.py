@@ -151,7 +151,10 @@ for line in GTfile:
     # if the end of phased data reached, introduce Ns to the last block 
     GTgtN = hetToNs(GTgt)
   elif int(GTchr) == int(stopChr) and int(GTpos) < int(stopPos):
-    # read line of GT.table while it is before the phased lines
+    # read line of GT.table while it is on the position before the phased position
+    GTgtN = hetToNs(GTgt)
+  elif int(GTchr) < int(stopChr):
+    # read line of GT.table while it is on the chromosome before the phased chromosome
     GTgtN = hetToNs(GTgt)
   elif (GTchr == stopChr and GTpos == stopPos):
     # if at the same position, read next line of phased data
@@ -168,7 +171,7 @@ for line in GTfile:
   else:
     # print Error with positions where if happened if there is an unpredicted condition
     print('ERROR')
-    print('GT:', line)
+    print('GT:', GTchr, GTpos)
     print('REF:', stopChr, stopPos)
   
   # write output
