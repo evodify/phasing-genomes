@@ -135,6 +135,8 @@ paste 12.4.haplotype.PHASED.tab *.col34 > all.haplotype.PHASED.tab
 python mergePHASEDsnps_withWholeGenome.py -p all.haplotype.PHASED.tab -g whole_genome_multiple_sample_GT.tab -o all.haplotype.PHASED.wholeGenome.tab -Np 0.16
 ```
 Only homozygous sites from a whole genome will be used for merging. Unphased heterozygous sites will be set to Ns. The number and order of samples in `all.haplotype.PHASED.tab` and `whole_genome_multiple_sample_GT.tab` should be the same.
+
+
 Again, missing data is a problem here. Phasing introduced some amount of Ns, so this needs to be taken into account during merging with a whole genome. MissingCorrectionValue (0.16) also need to be used here. 
 
 **Note!** Check the ratio between polymorphic and non-polymorphic sites before and after phasing. It should be the same. If it is not, modify MissingCorrectionValue until you get the same proportion. Artificially changing polymorphic/non-polymorphic ration can biase results in some subsequent analyses.
