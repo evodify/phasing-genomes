@@ -264,7 +264,7 @@ for line in GTfile:
     GTgtN = hetToNsBefore(GTgt)
     appendGT(GTcoord, GTgtN, GTbefore)
     # read phased file untill the same position is reached
-    while int(GTchr) >= int(stopChr) and int(GTpos) > int(stopPos):
+    while (int(GTchr) > int(stopChr)) or (int(GTchr) == int(stopChr) and int(GTpos) > int(stopPos)):
       phasedL = readPhasedLine(phasedFile, status)
       stopChr  = phasedL[0]
       stopPos = phasedL[1]
