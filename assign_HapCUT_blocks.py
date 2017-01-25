@@ -101,6 +101,9 @@ def lists_overlap(gt, lst):
   ref = lst.split(",")
   return any(i == gt for i in ref)
 
+def all_same(items):
+    return all(x == items[0] for x in items)
+
 def flat_list(lst):
   return [item for sublist in [i.split(",") for i in lst] for item in sublist]
 
@@ -133,14 +136,20 @@ def phase_blocks(posBlock, GTblock, RefBlock, FlagB):
         blockReverseCount += 1
         GTblockPhase.append('reverse')
 
-  # find prevalent phase and obey it
-  if len(GTblockPhase) <= 10: # absolutely consistent with parental genotypes or overlap with parental genotypes is less than 10 positions.
+  # find prevalent phase 
+  if all_same(GTblockPhase) and (len(GTblockPhase) >= 2):  # absolutely consistent with parental genotypes
+    if GTblockPhase[0] == ['same']:
+      RSratio = 1.0
+    else:
+      RSratio = 0.0
     RSratio = 0.0
+  elif GTblockPhase == []:  # phase unknown
+    RSratio = 'NA'
   else:
     RSratio = float(blockSameCount)/float(blockSameCount+blockReverseCount) # proportion of 'same' phasing state in block strings
 
   # define the block phase and produce output
-  if (GTblockPhase == []) or (RSratio < 0.90 and RSratio > 0.10): # discard block that have > 90% of inconsistency with parental reference genotypes
+  if (RSratio == 'NA') or (RSratio < 0.90 and RSratio > 0.10): # discard block that have > 90% of inconsistency with parental reference genotypes, or 
     for j in range(len(GTblock)):
       posBlockPrint = posBlock[j]
       GTblockPrint1 = 'N'
@@ -176,7 +185,7 @@ def write_phased(posB, GTb, RefB, Flag, R):
   output.write("********\n")  # uncomment this line to separate blocks
   phasedBlockRatio = phase_blocks(posB, GTb, RefB, Flag)
   phasedBlock = phasedBlockRatio[0]
-  if not (phasedBlockRatio[1] == 0 or phasedBlockRatio[1] == 1): # ignore ratio of 0 and 1
+  if not (phasedBlockRatio[1] == 0 or phasedBlockRatio[1] == 1 or phasedBlockRatio[1]=='NA'): # ignore ratio of 0, 1, NA
     R.append(phasedBlockRatio[1])
   for block in phasedBlock:
     BlockPrint = '\t'.join(str(e) for e in block)
@@ -252,8 +261,6 @@ with open(args.input_to_phase) as datafile:
     counter += 1
     if counter % 1000000 == 0:
       print str(counter), "lines processed"
-    else:
-      continue
 
   # Phase the last block
   write_phased(posBlock, GTblock, RefBlock, FlagBlock, Ratio)
@@ -267,6 +274,6 @@ plt.hist(Ratio, color="grey", bins = 100)
 plt.xticks(np.arange(0,1, 0.1))
 plt.xlabel('Propostion of phasing states: same/(same+reverse)')
 plt.ylabel("Number of blocks")
-plt.savefig(args.output+'.pdf', dpi=90)
+plt.savefig(args.output+'.png', dpi=90)
 
 print "Done!"
