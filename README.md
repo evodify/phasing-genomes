@@ -8,7 +8,7 @@ The phasing is performed in two stages:
 1. Generate phased haplotype blocks using [HapCUT](https://github.com/vibansal/hapcut)
 2. Merge haplotype blocks into two continuous strings.
 
-Preparing reference parental genomes performed as an intermediate step. 
+Preparing reference parental genomes performed as an intermediate step.
 
 Required files:  
 
@@ -117,7 +117,7 @@ for i in *.haplotype.PHASED.tab; do awk '$3==$4 && $3!="N" && $4!="N" {count++} 
 for i in *.haplotype.PHASED.tab; do awk '$3!=$4 {count++} END {print count}' $i; done
 ```
 
-##### Compare the levels of heterozygosity between original and phased data. 
+##### Compare the levels of heterozygosity between original and phased data.
 Expectation: `heterozygotsOriginal / homozygotsOriginal = heterozygotsPhased / homozygotsPhased`
 
 
@@ -128,7 +128,7 @@ I recommend to run `mergePhasedHeteroHomo_randomNs.py` with `introducedNs` value
 ```
 for i in *.haplotype.PHASED.tab; do cut -f 3,4 $i > $i.col34; done
 rm sample1.haplotype.PHASED.tab.col34
-paste 12.4.haplotype.PHASED.tab *.col34 > all.haplotype.PHASED.tab
+paste sample1.haplotype.PHASED.tab *.col34 > all.haplotype.PHASED.tab
 ```
 
 ### Merge phased SNPs with a whole genome (optional)
