@@ -83,13 +83,10 @@ Phasing introduces some amount of missing data. To keep balance between homozygo
 
 #### Estimate the missing data correction value.
 ```
-# heterozygotsPhased:
-for i in *.haplotype.PHASED; do grep -vwc "********" $i; done
-# nonMissingPhased:
-for i in *.haplotype.PHASED; do grep -vw "********" $i | awk '$3!=$4 {count++} END {print count}'; done
+for i in *.haplotype.PHASED; do awk '/^[^*]/ && /^[^#]/ {total++}; $3!=$4 {hetero++}; END {print hetero, total}' $i; done
 ```
 
-`introducedNs = 1 - nonMissingPhased / heterozygotsPhased`
+`introducedNs = 1 - hetero / total`
 
 `introducedNs` is used to define the missing data correction value (-Np). In my case, it was ~0.20.
 
@@ -101,20 +98,12 @@ python mergePhasedHeteroHomo_randomNs.py -p sample1.haplotype.PHASED -s sample-n
 ##### Count heterozygous and homozygous sites in original files
 `n` should be replaced with number of samples + 3:
 ```
-# homozygotsOriginal:
-for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1==$2 && $1!="N" && $2!="N" {count++} END {print count}'; done
-
-# heterozygotsOriginal:
-for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1!=$2 {count++} END {print count}'; done
+for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1==$2 && $1!="N" && $2!="N" {homo++}; $1!=$2 {hetero++} END {print hetero, homo}'; done
 ```
 
 ##### Count heterozygous and homozygous sites in merged files
 ```
-# homozygotsPhased:
-for i in *.haplotype.PHASED.tab; do awk '$3==$4 && $3!="N" && $4!="N" {count++} END {print count}' $i; done
-
-# heterozygotsPhased:
-for i in *.haplotype.PHASED.tab; do awk '$3!=$4 {count++} END {print count}' $i; done
+for i in *.haplotype.PHASED.tab; do awk '$3!=$4 {hetero++}; $3==$4 && $3!="N" && $4!="N" {homo++} END {print hetero, homo}' $i; done
 ```
 
 ##### Compare the levels of heterozygosity between original and phased data.
