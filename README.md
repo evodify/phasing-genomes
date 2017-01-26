@@ -129,3 +129,9 @@ Only homozygous sites from a whole genome will be used for merging. Unphased het
 
 
 Again, missing data is a problem here. Phasing introduced some amount of Ns, so this needs to be taken into account during merging with a whole genome. MissingCorrectionValue (0.16) also need to be used here. Check the ratio between polymorphic and non-polymorphic sites before and after phasing. It should be the same. If it is not, modify `introducedNs` until you get the same proportion. Artificially changing polymorphic/non-polymorphic ration can bias results in some subsequent analyses.
+
+Here is an example of the code to count heterozygous, homozygous and missing sites in the final merged dataset of 31 samples (~62 haplotypes, file `all.haplotype.PHASED.wholeGenome.tab`):
+
+```
+for i in `seq 3 2 64`; do cut -f $i,$((i+1)) all.wholeGenome.haplotype.PHASED.new.tab4 | awk '$1==$2 && $1!="N" && $2!="N" {homo++}; $1!=$2 {hetero++}; $1=="N" || $2=="N" {miss++} END {print hetero, homo, miss}'; done
+```
