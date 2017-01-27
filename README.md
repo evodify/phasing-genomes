@@ -83,35 +83,31 @@ Phasing introduces some amount of missing data. To keep balance between homozygo
 
 #### Estimate the missing data correction value.
 ```
-for i in *.haplotype.PHASED; do awk '/^[^*]/ && /^[^#]/ {total++}; $3!=$4 {hetero++}; END {print hetero, total}' $i; done
+echo "numberHeter numberNs introduceNs"; for i in *.haplotype.PHASED; do awk '/^[^*]/ && /^[^#]/ {total++}; $3!=$4 {hetero++}; $3=="N" || $4=="N" {miss++}; END {print hetero, miss, miss/total}' $i; done
 ```
 
-`introducedNs = 1 - hetero / total`
-
-`introducedNs` is used to define the missing data correction value (-Np). In my case, it was ~0.20.
+`introduceNs` is used to define the missing data correction value (-Np). In my case, it was ~0.15.
 
 #### Merge with introduction of Ns
 ```
-python mergePhasedHeteroHomo_randomNs.py -p sample1.haplotype.PHASED -s sample-name -g multiple_sample_GT.table -o sample1.haplotype.PHASED.tab -Np 0.20
+python mergePhasedHeteroHomo_randomNs.py -p sample1.haplotype.PHASED -s sample-name -g multiple_sample_GT.table -o sample1.haplotype.PHASED.tab -Np 0.15
 ```
 
 ##### Count heterozygous and homozygous sites in original files
 `n` should be replaced with number of samples + 3:
 ```
-for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1==$2 && $1!="N" && $2!="N" {homo++}; $1!=$2 {hetero++} END {print hetero, homo}'; done
+echo "numberHeter numberHomo numberNs heterozygosity"; for i in {4..n}; do cut -f $i multiple_sample_GT.table | sed 's/\// /g;s/\./N/g' | awk '$1==$2 && $1!="N" && $2!="N" {homo++}; $1!=$2 && $1!="N" && $2!="N" {hetero++}; $1=="N" || $2=="N" {miss++}  END {print hetero, homo, miss, hetero/(homo+hetero)}'; done
 ```
 
 ##### Count heterozygous and homozygous sites in merged files
 ```
-for i in *.haplotype.PHASED.tab; do awk '$3!=$4 {hetero++}; $3==$4 && $3!="N" && $4!="N" {homo++} END {print hetero, homo}' $i; done
+echo "numberHeter numberHomo numberNs heterozygosity"; for i in *.haplotype.PHASED.tab; do awk '$3!=$4 {hetero++}; $3==$4 && $3!="N" && $4!="N" {homo++}; $3!="N" || $4!="N" {miss++} END {print hetero, homo, miss, hetero/(homo+hetero)}' $i; done
 ```
 
 ##### Compare the levels of heterozygosity between original and phased data.
-Expectation: `heterozygotsOriginal / homozygotsOriginal = heterozygotsPhased / homozygotsPhased`
 
-
-The value of `introducedNs` is used for a very rough correction. For the most precise correction, `introducedNs` should be lowered by some amount because extra Ns are introduced to homozygots in all-Ns blocks.
-I recommend to run `mergePhasedHeteroHomo_randomNs.py` with `introducedNs` values in the -Np option and then lower it little by little, until the ratios heterozygots / homozygots in the phased and non-phased data are as similar as possible.
+The value of `introduceNs` is used for a very rough correction. For the most precise correction, `introduceNs` should be lowered by some amount because extra Ns are introduced to homozygots in all-Ns blocks.
+I recommend to run `mergePhasedHeteroHomo_randomNs.py` with `introduceNs` values in the -Np option and then lower it little by little, until the heterozygosity levels in the phased and non-phased data are as similar as possible.
 
 ### Merge all phased files togather
 ```
@@ -128,10 +124,15 @@ python mergePHASEDsnps_withWholeGenome.py -p all.haplotype.PHASED.tab -g whole_g
 Only homozygous sites from a whole genome will be used for merging. Unphased heterozygous sites will be set to Ns. The number and order of samples in `all.haplotype.PHASED.tab` and `whole_genome_multiple_sample_GT.tab` should be the same.
 
 
-Again, missing data is a problem here. Phasing introduced some amount of Ns, so this needs to be taken into account during merging with a whole genome. MissingCorrectionValue (0.16) also need to be used here. Check the ratio between polymorphic and non-polymorphic sites before and after phasing. It should be the same. If it is not, modify `introducedNs` until you get the same proportion. Artificially changing polymorphic/non-polymorphic ration can bias results in some subsequent analyses.
+Again, missing data is a problem here. Phasing introduced some amount of Ns, so this needs to be taken into account during merging with a whole genome. MissingCorrectionValue (0.16) also need to be used here. Check the ratio between polymorphic and non-polymorphic sites before and after phasing. It should be the same. If it is not, modify `introduceNs` until you get the same proportion. Artificially changing polymorphic/non-polymorphic ration can bias results in some subsequent analyses.
 
 Here is an example of the code to count heterozygous, homozygous and missing sites in the final merged dataset of 31 samples (~62 haplotypes, file `all.haplotype.PHASED.wholeGenome.tab`):
 
 ```
 for i in `seq 3 2 64`; do cut -f $i,$((i+1)) all.wholeGenome.haplotype.PHASED.new.tab4 | awk '$1==$2 && $1!="N" && $2!="N" {homo++}; $1!=$2 {hetero++}; $1=="N" || $2=="N" {miss++} END {print hetero, homo, miss}'; done
+```
+
+This code can be used to perform the counting on whole genome data set with single-character coded genotypes:
+```
+echo "numberHeter numberHomo numberNs heterozygosity"; for i in {3..n}; do cut -f $i whole.genome.unphased.tab | awk '$1=="A" || $1=="T" || $1=="G" || $1=="C" {homo++}; $1=="N" {miss++}; {total++} END {print (total-homo-miss), homo, miss, (total-homo-miss)/homo}'; done
 ```
