@@ -129,7 +129,7 @@ Again, missing data is a problem here. Phasing introduced some amount of Ns, so 
 Here is an example of the code to count heterozygous, homozygous and missing sites in the final merged dataset of 31 samples (~62 haplotypes, file `all.haplotype.PHASED.wholeGenome.tab`):
 
 ```
-for i in `seq 3 2 64`; do cut -f $i,$((i+1)) all.wholeGenome.haplotype.PHASED.new.tab4 | awk '$1==$2 && $1!="N" && $2!="N" {homo++}; $1!=$2 {hetero++}; $1=="N" || $2=="N" {miss++} END {print hetero, homo, miss}'; done
+echo "numberHeter numberHomo numberNs heterozygosity"; for i in `seq 3 2 64`; do cut -f $i,$((i+1)) all.haplotype.PHASED.wholeGenome.tab | awk '$1==$2 && $1!="N" && $2!="N" {homo++}; $1!=$2 {hetero++}; $1=="N" || $2=="N" {miss++} END {print hetero, homo, miss, hetero/(homo+hetero)}'; done
 ```
 
 This code can be used to perform the counting on whole genome data set with single-character coded genotypes:
