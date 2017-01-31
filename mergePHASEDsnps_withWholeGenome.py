@@ -69,18 +69,21 @@ scaffold_1  15  C   C   C   C
 contact Dmytro Kryvokhyzha dmytro.kryvokhyzha@evobio.eu
 
 python mergePHASEDsnps_withWholeGenome.py -p phased-file -g GT-file -o output-file -Np 0.15
+
 '''
 
-import argparse, sys, numpy
+############################# modules #############################
+
+import sys, argparse  # for options
+import numpy  # to assign Ns with probability
 
 ############################ options ##############################
-
 class MyParser(argparse.ArgumentParser): 
    def error(self, message):
       sys.stderr.write('error: %s\n' % message)
       self.print_help()
       sys.exit(2)
-
+      
 parser = MyParser()
 parser.add_argument('-p', '--phased', help = 'name of the phased data file', type=str, required=True)
 parser.add_argument('-g', '--genome', help = 'name of the GT table file', type=str, required=True)
@@ -90,12 +93,12 @@ args = parser.parse_args()
 
 prN = args.probability_of_N
 
-############################ functions ###########################
+############################ functions ##############################
 
-def hetToNs(g):
-  ''' all unphased heterozygotes are set to Ns, homozygotes are set to Ns with probability prN '''
+def hetToNs(g, pN):
+  ''' all unphased heterozygotes are set to Ns, homozygotes are set to Ns with probability pN '''
   if all([i in ['A','T','G','C','N'] for i in g]):
-    gtN = numpy.random.binomial(1, prN, 1)
+    gtN = numpy.random.binomial(1, pN, 1)
     gtl = [[[i, i], ['N', 'N']][int(gtN)] for i in g]
     gt = [i for e in gtl for i in e]
   else:
@@ -103,6 +106,23 @@ def hetToNs(g):
     # if printed by mistake, such sites are set to all-Ns
     gt = ['N', 'N']*len(g)
   return gt
+
+def is_polymorphic(sampWords):
+  ''' check if the set of genotypes is polymorphic '''
+  # fist skip missing data
+  noNsGT = []
+  for i in (sampWords):
+    if i != 'N':
+      noNsGT.append(i)
+  # check if there is polymorphism:
+  return any(x in 'RYMKSW' or x != noNsGT[0] for x in noNsGT)
+
+def process_unphased(g, pN):
+  """ replace heterozygouts with Ns and skip polymorphic sites in unphased data"""
+  gN = hetToNs(g, pN)
+  if is_polymorphic(gN):
+    gN = ['N', 'N']*len(g)
+  return gN
 
 ############################ script ##############################
 
@@ -119,10 +139,10 @@ stopChr  = phasedL[0].split('_')[1]
 stopPos = phasedL[1]
 phasedGT = phasedL[2:]
 GTfile = open(args.genome, 'r')
-GTheader = GTfile.readline()
+GTheader = GTfile.readline().split()
 
 # check if number of samples in two files overlap
-if len(phasedGT) != len(headerS[2:]):
+if len(phasedGT) != len(GTheader[2:])*2:
   raise Exception('Number of samples differs in two files')
 
 counter = 0
@@ -149,13 +169,13 @@ for line in GTfile:
   # merge files
   if stopChr == 'END':
     # if the end of phased data reached, introduce Ns to the last block 
-    GTgtN = hetToNs(GTgt)
+    GTgtN = process_unphased(GTgt, prN)
   elif int(GTchr) == int(stopChr) and int(GTpos) < int(stopPos):
     # read line of GT.table while it is on the position before the phased position
-    GTgtN = hetToNs(GTgt)
+    GTgtN = process_unphased(GTgt, prN)
   elif int(GTchr) < int(stopChr):
     # read line of GT.table while it is on the chromosome before the phased chromosome
-    GTgtN = hetToNs(GTgt)
+    GTgtN = process_unphased(GTgt, prN)
   elif (GTchr == stopChr and GTpos == stopPos):
     # if at the same position, read next line of phased data
     GTgtN = phasedGT
