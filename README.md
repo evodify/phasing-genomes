@@ -101,7 +101,7 @@ echo "numberHeter numberHomo numberNs heterozygosity"; for i in {4..n}; do cut -
 
 ##### Count heterozygous and homozygous sites in merged files
 ```
-echo "numberHeter numberHomo numberNs heterozygosity"; for i in *.haplotype.PHASED.tab; do awk '$3!=$4 {hetero++}; $3==$4 && $3!="N" && $4!="N" {homo++}; $3!="N" || $4!="N" {miss++} END {print hetero, homo, miss, hetero/(homo+hetero)}' $i; done
+echo "numberHeter numberHomo numberNs heterozygosity"; for i in *.haplotype.PHASED.tab; do awk '$3!=$4 {hetero++}; $3==$4 && $3!="N" && $4!="N" {homo++}; $3=="N" || $4=="N" {miss++} END {print hetero, homo, miss, hetero/(homo+hetero)}' $i; done
 ```
 
 ##### Compare the levels of heterozygosity between original and phased data.
