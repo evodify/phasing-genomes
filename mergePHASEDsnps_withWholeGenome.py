@@ -189,6 +189,7 @@ for line in GTfile:
       stopPos = []
       phasedGT = []
   else:
+    print line
     # print Error with positions where if happened if there is an unpredicted condition
     print('ERROR')
     print('GT:', GTchr, GTpos)
