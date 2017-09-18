@@ -23,7 +23,10 @@ scaffold_1  1301  C G
 scaffold_1  1475  C CAAAGAT
 scaffold_1  1476  A AAAGATG
 
-GT.table:
+#GT.table can be one- or two-character coded.
+
+# two-character coded GT.table:
+
 CHROM	POS	Sample1	Sample2	Sample3	Sample4
 scaffold_1	508	T/T	T/T	T/T	A/A
 scaffold_1	593	T/T	T/T	T/A	T/T
@@ -49,6 +52,34 @@ scaffold_1	1297	C/T	C/T	C/T	C/T
 scaffold_1	1301	C/G	C/G	C/G	C/G
 scaffold_1	1475	C/CAAAGAT	C/CAAAGAT	C/CAAAGAT	C/CAAAGAT
 scaffold_1	1476	A/AAAGATG	A/AAAGATG	A/AAAGATG	A/AAAGATG
+
+# one-character coded GT.table (NOTE! Skips indels):
+
+CHROM   POS Sample1 Sample2 Sample3 Sample4
+scaffold_1  508 T   T   T   A
+scaffold_1  593 T   T   W   T
+scaffold_1  619 N   N   N   N
+scaffold_1  635 A   A   W   A
+scaffold_1  655 N   N   W   A
+scaffold_1  656 N   N   N   N
+scaffold_1  658 N   N   A   W
+scaffold_1  679 M   M   M   M
+scaffold_1  700 C   C   C   Y
+scaffold_1  704 Y   Y   Y   Y
+scaffold_1  722 Y   Y   Y   Y
+scaffold_1  727 N   N   N   N
+scaffold_1  733 K   K   K   K
+scaffold_1  900 K   G   G   G
+scaffold_1  1000    W   T   T   T
+scaffold_1  1194    W   W   W   W
+scaffold_1  1204    R   R   R   R
+scaffold_1  1210    R   R   R   R
+scaffold_1  1214    Y   Y   Y   Y
+scaffold_1  1234    W   W   W   W
+scaffold_1  1297    Y   Y   Y   Y
+scaffold_1  1301    S   S   S   S
+scaffold_1  1475    N   N   N   N
+scaffold_1  1476    N   N   N   N
 
 output:
 CHROM  POS Sample1_A  Sample1_B
@@ -97,6 +128,26 @@ args = parser.parse_args()
 prN = args.probability_of_N
 
 ############################ functions ###########################
+
+def oneToTwoCharacter(g):
+  ''' splits one-character code to two-characters coded genotypes '''
+  if g in 'ATGC':
+    gt = [g]*2
+  elif g == 'R':
+   gt = ['A','G']
+  elif g == 'Y':
+    gt = ['T','C']
+  elif g == 'M':
+    gt = ['A','C']
+  elif g == 'K':
+    gt = ['G','T']
+  elif g == 'S':
+    gt = ['G','C']
+  elif g == 'W':
+    gt = ['A','T']
+  else:
+    gt = ['N', 'N']
+  return gt
 
 def hetToNsBlock(g):
   ''' heterozygotes from GT.table that are within a Ns block are set to Ns '''
@@ -224,7 +275,13 @@ for line in GTfile:
   GTchr = words[0].split('_')[1]
   GTpos = words[1]
   GTcoord = words[0:2]
-  GTgt = words[indnumber].split('/')
+
+  # define is GT.table is one- or two-character code
+  if '/' in words[indnumber]:
+    GTgt = words[indnumber].split('/')
+  else:
+    GTgt = oneToTwoCharacter(words[indnumber])
+
   if stopChr == 'NA':
     ''' when there is no phased data but GT.table still has some information. 
     Usually it is at the end of file '''
