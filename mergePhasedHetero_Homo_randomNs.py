@@ -111,13 +111,13 @@ import argparse, sys, numpy
 
 ############################ options ##############################
 
-class MyParser(argparse.ArgumentParser): 
+class CommandLineParser(argparse.ArgumentParser): 
    def error(self, message):
       sys.stderr.write('error: %s\n' % message)
       self.print_help()
       sys.exit(2)
 
-parser = MyParser()
+parser = CommandLineParser()
 parser.add_argument('-p', '--phased', help = 'name of the phased data file', type=str, required=True)
 parser.add_argument('-g', '--gt_table', help = 'name of the GT table file', type=str, required=True)
 parser.add_argument('-s', '--sample_name', help = 'name of the sample in the GT table file', type=str, required=True)
