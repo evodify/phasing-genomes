@@ -182,7 +182,7 @@ def phase_blocks(posBlock, GTblock, RefBlock, FlagB):
 
 def write_phased(posB, GTb, RefB, Flag, R):
   """ preform phasing and write output"""
-  output.write("********\n")  # uncomment this line to separate blocks
+  #output.write("********\n")  # uncomment this line to separate blocks
   phasedBlockRatio = phase_blocks(posB, GTb, RefB, Flag)
   phasedBlock = phasedBlockRatio[0]
   if not (phasedBlockRatio[1] == 0 or phasedBlockRatio[1] == 1 or phasedBlockRatio[1]=='NA'): # ignore ratio of 0, 1, NA
@@ -190,6 +190,8 @@ def write_phased(posB, GTb, RefB, Flag, R):
   for block in phasedBlock:
     BlockPrint = '\t'.join(str(e) for e in block)
     output.write("%s\n" % BlockPrint)
+  scoresP = '\t'.join(str(e) for e in [phasedBlock[0][0], phasedBlock[0][1], phasedBlock[-1][1], phasedBlockRatio[1]])
+  outputS.write("%s\n" % scoresP)
 
 ############################ script ##############################
 
@@ -205,7 +207,10 @@ counter = 0
 print('Creating the output file...')
 sampleID = args.input_to_phase
 output = open(args.output, 'w')
+outputS = open(args.output+'.scores', 'w')
 output.write("#CHROM\tPOS\t%s_A\t%s_B\n" % (sampleID, sampleID)) # make a header
+outputS.write("#CHROM\tstartPOS\tendPOS\t%s\n" % (sampleID)) # make a header
+
 
 Ratio = [] # ratio between phasing states ['reverse', 'same']
 
