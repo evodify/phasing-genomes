@@ -136,3 +136,5 @@ This code can be used to perform the counting on whole genome data set with sing
 ```
 echo "numberHeter numberHomo numberNs heterozygosity"; for i in {3..n}; do cut -f $i whole.genome.unphased.tab | awk '$1=="A" || $1=="T" || $1=="G" || $1=="C" {homo++}; $1=="N" {miss++}; {total++} END {print (total-homo-miss), homo, miss, (total-homo-miss)/homo}'; done
 ```
+
+**DISCLAIMER:** USE THIS PIPELINE AT YOUR OWN RISK. I MAKE NO WARRANTIES THAT THIS PIPELINE IS BUG-FREE, COMPLETE, AND UP-TO-DATE. I AM NOT LIABLE FOR ANY LOSSES IN CONNECTION WITH THE USE OF THIS PIPELINE.
