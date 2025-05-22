@@ -1,7 +1,11 @@
 # Genome phasing
 This is a pipeline to phase a genome into two homeologous subgenomes. The assumption is that there is limited recombination between two subgenomes (e.g. disomic inheritance). Parental genomes are required.
 
-Originally, the pipeline was developed to phase genomes of *Capsella bursa-pastoris* (Brassicaceae).
+Originally, the pipeline was developed to phase genomes of *Capsella bursa-pastoris* (Brassicaceae):
+
+[Kryvokhyzha et al. Parental legacy, demography, and admixture influenced the evolution of the two subgenomes of the tetraploid Capsella bursa-pastoris (Brassicaceae). PLoS Genet. 2019](http://doi.org/10.1371/journal.pgen.1007949)
+
+[Kryvokhyzha et al. Towards the new normal: Transcriptomic convergence and genomic legacy of the two subgenomes of an allopolyploid weed (Capsella bursa-pastoris). PLoS Genet. 2019](http://doi.org/10.1371/journal.pgen.1008131)
 
 The phasing is performed in two stages:
 
